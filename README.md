@@ -1,4 +1,4 @@
-文档制作工具 · Doc Builder
+文档制作工具
 一个零依赖、零构建、纯前端的可视化文档编辑器。拖拽式搭积木排版，一键导出网页 / ZIP / PDF / Markdown。
 
 打开一个 HTML 文件就能用——不用装 Node，不用跑 npm，不用后端。适合写报告、做笔记、整理学习计划、搭建个人导航页等场景。
@@ -136,16 +136,6 @@ Esc	取消选中 / 关闭弹窗
 勾选「在子元素之间显示竖线」让布局更好看
 
 🏗 技术实现
-整体架构
-text
-┌─────────────── app (CSS Grid) ───────────────┐
-│  header：文件菜单 / 撤销重做 / 复制 / 帮助 / 预览  │
-├────────┬───────────────────────┬─────────────┤
-│ 左侧栏  │      画布 canvas       │   右侧属性栏  │
-│ 页面树  │  （当前页面的块集合）    │  （当前选中块）│
-│ 组件库  │                       │             │
-└────────┴───────────────────────┴─────────────┘
-              status-bar（字数 / 块数 / 保存状态）
 核心设计：DOM 即数据源
 数据层：state.pages[]，每项带 id / name / slug / bg / isHome / parentId 和活的 DOM 元素引用 el
 
@@ -192,7 +182,7 @@ text
 doc-builder/
 ├── index.html      # 全部代码（HTML + CSS + JS 内联）
 ├── README.md       # 本文档
-└── LICENSE         # MIT
+└── LICENSE         
 🔒 数据与隐私
 所有内容只存在你的浏览器里，不上传任何服务器
 
@@ -231,9 +221,6 @@ renderProps() 加属性面板分支，以及 propsEl 的 click / change / input 
 serializeBlock() 加导出分支（否则导出丢内容）
 
 可选：blockToMd() 加 Markdown 映射
-
-📜 许可
-MIT License
 
 🙏 致谢
 组件设计参考了 Material for MkDocs 与 Notion
