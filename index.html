@@ -612,6 +612,8 @@ kbd{display:inline-block;background:#eef1f6;border:1px solid #dde3ed;border-radi
       <button class="btn" id="btn-redo" title="重做 (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
       <button class="btn" id="btn-copy" title="复制当前页（含 CSS 与 JS）">
         <i class="fa-solid fa-copy"></i><span class="btn-label">复制 HTML</span></button>
+      <button class="btn" id="btn-fullscreen" title="全屏 (F11 / Ctrl+Shift+F)">
+        <i class="fa-solid fa-expand"></i><span class="btn-label">全屏</span></button>
       <button class="btn" id="btn-help" title="帮助 (?)"><i class="fa-solid fa-circle-question"></i></button>
       <button class="btn btn-primary" id="btn-preview" title="预览 (Ctrl+P)">
         <i class="fa-solid fa-eye"></i><span class="btn-label">预览</span></button>
@@ -4607,6 +4609,45 @@ document.querySelectorAll('[data-close]').forEach(el => {
 });
 function openHelp(){ modalHelp.hidden = false; }
 function closeHelp(){ modalHelp.hidden = true; }
+
+/* ============================================================
+ *  全屏
+ * ============================================================ */
+const btnFullscreen = document.getElementById('btn-fullscreen');
+function isFullscreen(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+
+function updateFullscreenBtn(){
+  if (!btnFullscreen) return;
+  const on = isFullscreen();
+  btnFullscreen.innerHTML = on
+    ? '<i class="fa-solid fa-compress"></i><span class="btn-label">退出全屏</span>'
+    : '<i class="fa-solid fa-expand"></i><span class="btn-label">全屏</span>';
+  btnFullscreen.title = on ? '退出全屏 (F11 / Ctrl+Shift+F)' : '全屏 (F11 / Ctrl+Shift+F)';
+}
+
+async function toggleFullscreen(){
+  try{
+    if (!isFullscreen()){
+      const el = document.documentElement;
+      const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if (fn) await fn.call(el);
+    } else {
+      const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (fn) await fn.call(document);
+    }
+  }catch(err){
+    console.warn('全屏失败', err);
+  }
+  updateFullscreenBtn();
+}
+
+if (btnFullscreen){
+  btnFullscreen.addEventListener('click', toggleFullscreen);
+}
+['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(evt => {
+  document.addEventListener(evt, updateFullscreenBtn);
+});
+updateFullscreenBtn();
 document.getElementById('btn-help').addEventListener('click', openHelp);
 document.querySelectorAll('.help-tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -4893,6 +4934,7 @@ document.addEventListener('keydown', e => {
   }
   if (e.key.toLowerCase() === 's'){ e.preventDefault(); autoSave(); return; }
   if (e.key.toLowerCase() === 'p'){ e.preventDefault(); openPreview(); return; }
+  if (e.key.toLowerCase() === 'f' && e.shiftKey){ e.preventDefault(); toggleFullscreen(); return; }
   if (e.key.toLowerCase() === 'd' && state.selected){ e.preventDefault(); duplicateBlock(state.selected); return; }
   if (e.key.toLowerCase() === 'k' && isEditable){ e.preventDefault(); insertLink(); return; }
   if (e.key === 'ArrowUp' && state.selected && !isEditable && !isTextArea){ e.preventDefault(); moveBlock(state.selected, 'up'); return; }
