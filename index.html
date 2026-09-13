@@ -297,6 +297,26 @@ body.resizing,body.resizing *{cursor:col-resize !important;user-select:none !imp
 }
 .block[data-hasw="1"] > :not(.block-bar){width:100%;}
 
+/* —— 用户设定高度：块变纵向 flex，让内容撑满 —— */
+.block[data-hash="1"]{
+  height:var(--user-h,auto) !important;
+  flex:0 0 auto !important;
+  display:flex;flex-direction:column;
+}
+/* —— 宽度不满时的水平对齐 —— */
+.block[data-hasw="1"][data-align="center"]{align-self:center;}
+.block[data-hasw="1"][data-align="right"]{align-self:flex-end;}
+.block[data-hash="1"] > :not(.block-bar){
+  flex:1 1 auto;
+  min-height:0;
+}
+/* 按钮类自带 min-height，撑满时以用户高度为准 */
+.block[data-hash="1"] > .blk-pagelink,
+.block[data-hash="1"] > .blk-extlink,
+.block[data-hash="1"] > .blk-trigger{
+  min-height:0;
+}
+
 /* —— 提示框内部容器 —— */
 .admonition-body{
   padding:6px 10px;min-height:30px;margin:4px 6px 12px;
@@ -1804,6 +1824,44 @@ body[data-editor-mode="dark"] .multi-banner-inner #multi-clear{
 body[data-editor-mode="dark"] .multi-banner-inner #multi-clear:hover{
   border-color:var(--accent);color:#f9a8d4;
 }
+
+/* ============================================================
+   四十二、属性面板：对齐分段控件
+   ============================================================ */
+.align-group{
+  display:flex;
+  border:1px solid var(--border);
+  border-radius:7px;
+  overflow:hidden;
+  background:var(--panel);
+}
+.align-btn{
+  flex:1;
+  padding:8px 0;
+  font-size:12px;
+  color:var(--muted);
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  transition:color .14s,background-color .14s;
+  display:flex;align-items:center;justify-content:center;
+}
+.align-btn + .align-btn{border-left:1px solid var(--border);}
+.align-btn:hover{color:var(--text);background:rgba(127,127,127,.06);}
+.align-btn.active{
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:600;
+}
+body[data-editor-mode="dark"] .align-btn:hover{background:rgba(255,255,255,.04);}
+body[data-editor-mode="dark"] .align-btn.active{color:#f9a8d4;}
+/* 行布局中的宽高块，不要被 flex-basis 抢走尺寸 */
+.inline-row > .block[data-hash="1"],
+.inline-col > .block[data-hash="1"],
+.inline-row > .block[data-hasw="1"],
+.inline-col > .block[data-hasw="1"]{
+  flex:0 0 auto !important;
+}
 </style>
 </head>
 <body data-editor-mode="light">
@@ -2261,7 +2319,8 @@ const ENTRANCE_ANIMS = [
 
 /* —— 类型分组 —— */
 const TEXTY = ['text','heading','list','quote','admonition'];
-const WIDTHABLE_TYPES = ['pagelink','extlink','trigger'];
+const WIDTHABLE_TYPES  = ['pagelink','extlink','trigger'];
+const HEIGHTABLE_TYPES = ['pagelink','extlink','trigger','iframe'];
 const SETTEXT_ALLOWED_TYPES = ['text','heading','admonition','pagelink','extlink','trigger'];
 
 /* —— 存储键 —— */
@@ -5695,9 +5754,27 @@ function renderProps(){
 
   if (WIDTHABLE_TYPES.includes(type)){
     const w = state.selected.dataset.w || '';
+    const align = state.selected.dataset.align || 'left';
     html += `<div class="prop-group"><label>按钮宽度</label>
       <input class="text-input" id="prop-btn-w" type="text"
              placeholder="留空 = 占满整行（如 200px / 50% / auto）" value="${escapeAttr(w)}">
+    </div>`;
+    html += `<div class="prop-group"><label>水平对齐</label>
+      <div class="align-group" role="group">
+        <button class="align-btn ${align === 'left'   ? 'active' : ''}" data-align="left"   title="靠左"><i class="fa-solid fa-align-left"></i></button>
+        <button class="align-btn ${align === 'center' ? 'active' : ''}" data-align="center" title="居中"><i class="fa-solid fa-align-center"></i></button>
+        <button class="align-btn ${align === 'right'  ? 'active' : ''}" data-align="right"  title="靠右"><i class="fa-solid fa-align-right"></i></button>
+      </div>
+      <div class="mini-note">仅当宽度小于整行时生效（宽度留空自动占满，对齐无意义）。</div>
+    </div>`;
+  }
+
+  if (HEIGHTABLE_TYPES.includes(type)){
+    const h = state.selected.dataset.h || '';
+    html += `<div class="prop-group"><label>元素高度</label>
+      <input class="text-input" id="prop-btn-h" type="text"
+             placeholder="留空 = 内容自适应（如 80px / 4em / 50vh）" value="${escapeAttr(h)}">
+      <div class="mini-note">作用于按钮与内嵌网页。支持 px / em / % / vh。</div>
     </div>`;
   }
 
@@ -5888,11 +5965,10 @@ function renderProps(){
   if (type === 'iframe' && main){
     html += `<div class="prop-group"><label>网页地址</label>
       <input class="text-input" id="prop-ifr-src" type="text" placeholder="https://..." value="${escapeAttr(main.dataset.src || '')}"></div>`;
-    html += `<div class="prop-group"><label>尺寸</label>
-      <div class="fmt-row">
-        <input class="text-input" id="prop-ifr-w" type="text" placeholder="100%" value="${escapeAttr(main.style.width || '100%')}">
-        <input class="text-input" id="prop-ifr-h" type="text" placeholder="320px" value="${escapeAttr(main.style.height || '320px')}">
-      </div></div>`;
+    html += `<div class="prop-group"><label>宽度</label>
+      <input class="text-input" id="prop-ifr-w" type="text" placeholder="100%" value="${escapeAttr(main.style.width || '100%')}">
+      <div class="mini-note">高度请使用上方「元素高度」输入框。</div>
+    </div>`;
   }
   if (type === 'pagelink' && main){
     html += `<div class="prop-group"><label>链接文字</label>
@@ -6057,6 +6133,17 @@ propsEl.addEventListener('click', async e => {
       state.selectedSet.add(keep.dataset.uid);
     }
     renderProps();
+    return;
+  }
+  const alignBtn = e.target.closest('.align-btn');
+  if (alignBtn && state.selected &&
+      WIDTHABLE_TYPES.includes(state.selected.dataset.type)){
+    e.preventDefault();
+    const v = alignBtn.dataset.align || 'left';
+    if (v === 'left'){ delete state.selected.dataset.align; }
+    else { state.selected.dataset.align = v; }
+    renderProps();
+    pushHistory();
     return;
   }
   if (e.target.closest('#page-open-theme')){ openThemeModal(); return; }
@@ -6410,14 +6497,33 @@ propsEl.addEventListener('input', e => {
   /* —— 块属性输入 —— */
   if (id === 'prop-btn-w'){
     const v = e.target.value.trim();
+    const blk = state.selected;
     if (v){
-      state.selected.dataset.w = v;
-      state.selected.dataset.hasw = '1';
-      state.selected.style.setProperty('--user-w', v);
+      blk.dataset.w = v;
+      blk.dataset.hasw = '1';
+      blk.style.setProperty('--user-w', v);
     } else {
-      delete state.selected.dataset.w;
-      delete state.selected.dataset.hasw;
-      state.selected.style.removeProperty('--user-w');
+      delete blk.dataset.w;
+      delete blk.dataset.hasw;
+      blk.style.removeProperty('--user-w');
+    }
+    scheduleHistory();
+    return;
+  }
+  if (id === 'prop-btn-h'){
+    const v = e.target.value.trim();
+    const blk = state.selected;
+    const mainEl = blk.querySelector(':scope > :not(.block-bar)');
+    if (v){
+      blk.dataset.h = v;
+      blk.dataset.hash = '1';
+      blk.style.setProperty('--user-h', v);
+      if (mainEl && blk.dataset.type === 'iframe') mainEl.style.height = v;
+    } else {
+      delete blk.dataset.h;
+      delete blk.dataset.hash;
+      blk.style.removeProperty('--user-h');
+      if (mainEl && blk.dataset.type === 'iframe') mainEl.style.height = '';
     }
     scheduleHistory();
     return;
@@ -6497,7 +6603,6 @@ propsEl.addEventListener('input', e => {
   }
   if (id === 'prop-ifr-src'){ main.dataset.src = e.target.value.trim(); main.src = e.target.value.trim(); scheduleHistory(); return; }
   if (id === 'prop-ifr-w'){ main.style.width = e.target.value.trim() || '100%'; scheduleHistory(); return; }
-  if (id === 'prop-ifr-h'){ main.style.height = e.target.value.trim() || '320px'; scheduleHistory(); return; }
   if (id === 'prop-link-text' && state.selected.dataset.type === 'pagelink'){ main.textContent = e.target.value; scheduleHistory(); return; }
   if (id === 'prop-ext-text' && state.selected.dataset.type === 'extlink'){ main.textContent = e.target.value; scheduleHistory(); return; }
   if (id === 'prop-ext-url' && state.selected.dataset.type === 'extlink'){ main.dataset.url = e.target.value.trim(); scheduleHistory(); return; }
@@ -6811,10 +6916,30 @@ function serializeContainer(container, depth){
   }
   return out;
 }
-function widthAttr(block){
+/* 生成按钮类元素的宽高属性串，供序列化复用 */
+function sizeAttrs(block){
   const w = block.dataset.w || '';
-  if (!w) return '';
-  return ` data-hasw="1" style="width:${escapeAttr(w)};max-width:100%;"`;
+  const h = block.dataset.h || '';
+  const align = block.dataset.align || 'left';
+  if (!w && !h) return '';
+  const styles = [];
+  let attrs = '';
+  if (w){
+    attrs += ' data-hasw="1"';
+    styles.push('width:' + w);
+    styles.push('max-width:100%');
+    if (align === 'center') styles.push('align-self:center');
+    else if (align === 'right') styles.push('align-self:flex-end');
+    else styles.push('align-self:flex-start');
+  }
+  if (h){
+    attrs += ' data-hash="1"';
+    styles.push('height:' + h);
+  }
+  return attrs + ' style="' + escapeAttr(styles.join(';')) + ';"';
+}
+function widthAttr(block){
+  return sizeAttrs(block);
 }
 function addBlockAttrs(html, uid, anim, hoverAnim, block){
   if (!html) return html;
@@ -6996,10 +7121,18 @@ function serializeBlock(block, depth, pad){
     }
     case 'iframe': {
       const src = main.dataset.src || main.getAttribute('src') || '';
-      const w = main.style.width || '100%';
-      const h = main.style.height || '320px';
-      result = `${pad}<iframe src="${escapeAttr(src)}" style="width:${w};height:${h};border:1px solid var(--doc-border,#d8dee9);border-radius:8px;" loading="lazy"></iframe>\n`;
-      break;
+      /* 用户自定义宽高优先，否则回落到内联样式或默认值 */
+      const w = block.dataset.w || main.style.width || '100%';
+      const h = block.dataset.h || main.style.height || '320px';
+      let ifrAttrs = ' data-uid="' + escapeAttr(uid) + '"';
+      if (anim) ifrAttrs += ' data-anim="' + escapeAttr(anim) + '"';
+      if (hoverAnim) ifrAttrs += ' data-hover-anim="' + escapeAttr(hoverAnim) + '"';
+      if (isHidden) ifrAttrs += ' hidden';
+      if (block.dataset.w) ifrAttrs += ' data-hasw="1"';
+      if (block.dataset.h) ifrAttrs += ' data-hash="1"';
+      result = `${pad}<iframe src="${escapeAttr(src)}"${ifrAttrs} style="width:${escapeAttr(w)};height:${escapeAttr(h)};border:1px solid var(--doc-border,#d8dee9);border-radius:8px;" loading="lazy"></iframe>\n`;
+      /* 已手动附加所有属性，跳过末尾的 addBlockAttrs 流程 */
+      return result;
     }
     case 'pagelink': {
       const targetId = main.dataset.target || '';
@@ -7011,7 +7144,7 @@ function serializeBlock(block, depth, pad){
         const target = state.pages.find(p => p.id === targetId);
         href = '#' + (target ? target.slug : '');
       }
-      const wAttrLocal = block.dataset.w ? ` data-hasw="1" style="width:${escapeAttr(block.dataset.w)};max-width:100%;"` : '';
+      const wAttrLocal = sizeAttrs(block);
       result = `${pad}<a href="${escapeAttr(href)}" class="page-link"${wAttrLocal}>${text}</a>\n`;
       break;
     }
@@ -7034,7 +7167,7 @@ function serializeBlock(block, depth, pad){
     case 'extlink': {
       const url = main.dataset.url || '#';
       const text = escapeHTML(main.textContent || url);
-      const wAttrLocal = block.dataset.w ? ` data-hasw="1" style="width:${escapeAttr(block.dataset.w)};max-width:100%;"` : '';
+      const wAttrLocal = sizeAttrs(block);
       result = `${pad}<a href="${escapeAttr(url)}" target="_blank" rel="noopener" class="ext-link"${wAttrLocal}>${text}</a>\n`;
       break;
     }
@@ -7059,7 +7192,7 @@ function serializeBlock(block, depth, pad){
       const actions = getTriggerActions(main);
       const actionsJson = JSON.stringify(actions);
       const text = escapeHTML(main.textContent || '触发器');
-      const wAttrLocal = block.dataset.w ? ` data-hasw="1" style="width:${escapeAttr(block.dataset.w)};max-width:100%;"` : '';
+      const wAttrLocal = sizeAttrs(block);
       result = `${pad}<button type="button" class="blk-trigger" data-actions='${escapeAttr(actionsJson)}'${wAttrLocal}>${text}</button>\n`;
       break;
     }
@@ -7070,8 +7203,9 @@ function serializeBlock(block, depth, pad){
     }
   }
 
-  if (result && uid && type !== 'toc'){
-    if (result.indexOf('data-hasw="1"') === -1){
+  if (result && uid && type !== 'toc' && type !== 'iframe'){
+    const alreadySized = result.indexOf('data-hasw="1"') !== -1 || result.indexOf('data-hash="1"') !== -1;
+    if (!alreadySized){
       result = addBlockAttrs(result, uid, anim, hoverAnim, block);
     } else {
       let attrs = '';
@@ -7442,7 +7576,8 @@ td .admonition,th .admonition{margin:6px 0;}
 .toc-block a:hover{color:var(--doc-accent,#e92063);background:color-mix(in srgb,var(--doc-accent,#e92063) 12%,transparent);}
 .inline-row{display:flex;flex-direction:row;align-items:stretch;gap:10px;padding:2px 0;min-height:34px;flex-wrap:nowrap;}
 .inline-row > *{flex:1 1 0;min-width:0;}
-.inline-row > [data-hasw="1"]{flex:0 0 auto;}
+/* —— 用户设定高度 —— */
+[data-hash="1"]{min-height:0;}
 /* 竖分割线在导出文档中也保持 1px 宽度 */
 .inline-row > .vdivider{flex:0 0 1px !important;min-width:1px !important;max-width:1px !important;}
 .inline-row[data-divider="true"] > * + *{padding-left:10px;border-left:1px solid var(--doc-border,#e2e6ee);}
