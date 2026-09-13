@@ -1091,31 +1091,93 @@ body[data-editor-mode="dark"] select option:checked{background:#f472b6;color:#0f
    三十、帮助面板
    ============================================================ */
 .help-tabs{
-  display:flex;gap:4px;border-bottom:1px solid var(--border);
-  padding:0 22px;background:rgba(127,127,127,.05);
+  display:flex;gap:4px;
+  margin:14px 22px 0;
+  padding:4px;
+  background:rgba(127,127,127,.08);
+  border:1px solid var(--border);
+  border-radius:10px;
 }
-.help-tab{
-  padding:10px 14px;font-size:13px;color:var(--muted);
-  border:none;border-bottom:2px solid transparent;
-  cursor:pointer;background:none;transition:.15s;
+.help-tab,
+.theme-tab{
+  flex:1;
+  padding:8px 14px;
+  font-size:13px;font-weight:500;
+  color:var(--muted);
+  border:none;border-radius:7px;
+  cursor:pointer;
+  background:transparent;
+  transition:color .16s,background-color .16s,box-shadow .16s;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-family:inherit;
+  white-space:nowrap;
 }
-.help-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.help-tab i,
+.theme-tab i{font-size:12px;opacity:.85;}
+.help-tab:hover,
+.theme-tab:hover{color:var(--text);background:rgba(127,127,127,.1);}
+.help-tab.active,
+.theme-tab.active{
+  color:var(--accent);
+  background:var(--panel);
+  font-weight:600;
+  box-shadow:0 1px 3px rgba(24,32,48,.12),0 0 0 1px rgba(127,127,127,.08);
+}
+body[data-editor-mode="dark"] .help-tabs{background:rgba(255,255,255,.04);}
+body[data-editor-mode="dark"] .help-tab:hover,
+body[data-editor-mode="dark"] .theme-tab:hover{background:rgba(255,255,255,.06);}
+body[data-editor-mode="dark"] .help-tab.active,
+body[data-editor-mode="dark"] .theme-tab.active{
+  background:#232837;
+  box-shadow:0 1px 3px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06);
+}
+
 .help-pane{display:none;}
 .help-pane.active{display:block;}
-.elem-table{width:100%;border-collapse:collapse;font-size:12.5px;}
-.elem-table td{padding:8px 6px;border-bottom:1px solid var(--border);vertical-align:top;}
-.elem-table td:first-child{width:110px;color:var(--text);font-weight:600;white-space:nowrap;}
-.elem-table td:last-child{color:var(--muted);line-height:1.7;}
 
 /* ============================================================
    三十一、主题面板
    ============================================================ */
 .theme-body{
-  padding:18px 22px 22px;overflow-y:auto;flex:1;
+  padding:16px 22px 22px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
   font-size:13px;line-height:1.8;color:var(--text);
+  overflow:hidden;
 }
-.theme-pane{display:none;}
-.theme-pane.active{display:block;}
+.theme-pane{display:none;min-height:0;}
+.theme-pane.active{
+  display:block;
+  flex:1;min-height:0;
+  overflow-y:auto;
+}
+.theme-pane.active[data-tpane="custom"]{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.theme-pane.active[data-tpane="custom"] > *{flex-shrink:0;}
+.theme-pane.active[data-tpane="custom"] > .theme-css-input{flex:1 1 auto;}
+.theme-css-input{
+  width:100%;
+  flex:1 1 auto;
+  min-height:200px;
+  font-family:"Roboto Mono",Consolas,monospace;
+  font-size:12.5px;line-height:1.65;
+  padding:14px 16px;
+  resize:none;
+  background:var(--panel);
+  color:var(--text);
+  white-space:pre;
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:8px;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.theme-css-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
 .mode-bar{
   display:flex;gap:8px;align-items:center;padding:12px 14px;
   border-radius:10px;background:rgba(127,127,127,.05);
@@ -1190,6 +1252,7 @@ body[data-editor-mode="dark"] .mode-btn.active{color:#0f1219;}
   padding:12px 14px;font-family:"Roboto Mono",Consolas,monospace;
   font-size:12px;line-height:1.65;overflow-x:auto;white-space:pre;
   color:var(--text);margin:10px 0;
+  flex-shrink:0;
 }
 .doc-h{font-size:14px;font-weight:700;margin:22px 0 8px;color:var(--text);}
 .doc-h:first-child{margin-top:0;}
@@ -1628,6 +1691,119 @@ body[data-editor-mode="dark"] .canvas-wrap{background:#0a0d14;}
   scrollbar-width:thin;
   scrollbar-color:var(--scrollbar-thumb) transparent;
 }
+
+/* ============================================================
+   四十、弹出层动画
+   —— 所有弹窗 / 菜单 / 灯箱的入场过渡
+   —— 依赖 display:none → 可见 的切换自动触发（无需 JS）
+   ============================================================ */
+
+@keyframes maskFadeIn{
+  from{opacity:0;}
+  to  {opacity:1;}
+}
+@keyframes modalPopIn{
+  from{opacity:0;transform:translateY(14px) scale(.96);}
+  to  {opacity:1;transform:translateY(0) scale(1);}
+}
+@keyframes popoverIn{
+  from{opacity:0;transform:translateY(-6px) scale(.97);}
+  to  {opacity:1;transform:translateY(0) scale(1);}
+}
+@keyframes ctxPopIn{
+  from{opacity:0;transform:scale(.93);}
+  to  {opacity:1;transform:scale(1);}
+}
+@keyframes lightboxIn{
+  from{opacity:0;}
+  to  {opacity:1;}
+}
+@keyframes lightboxImgIn{
+  from{opacity:0;transform:scale(.92);}
+  to  {opacity:1;transform:scale(1);}
+}
+
+.modal .modal-mask{
+  animation:maskFadeIn .2s ease-out both;
+}
+.modal .modal-box{
+  animation:modalPopIn .28s cubic-bezier(.16,1,.3,1) both;
+  transform-origin:center top;
+}
+#modal-dialog .modal-box{
+  animation-duration:.22s;
+}
+
+.dropdown-menu.open{
+  animation:popoverIn .16s ease-out both;
+  transform-origin:top right;
+}
+
+.ctx-menu:not([hidden]){
+  animation:ctxPopIn .13s ease-out both;
+  transform-origin:top left;
+}
+
+.csel-menu{
+  transform:translateY(-4px) scale(.98);
+  transition:opacity .14s ease,transform .14s ease;
+}
+.csel-menu.open{
+  transform:translateY(0) scale(1);
+}
+
+.lightbox:not([hidden]){
+  animation:lightboxIn .2s ease-out both;
+}
+.lightbox:not([hidden]) img{
+  animation:lightboxImgIn .28s cubic-bezier(.16,1,.3,1) both;
+}
+.lightbox:not([hidden]) .lightbox-close,
+.lightbox:not([hidden]) .lightbox-hint{
+  animation:maskFadeIn .35s ease-out .08s both;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .modal .modal-mask,
+  .modal .modal-box,
+  .dropdown-menu.open,
+  .ctx-menu:not([hidden]),
+  .lightbox:not([hidden]),
+  .lightbox:not([hidden]) img,
+  .lightbox:not([hidden]) .lightbox-close,
+  .lightbox:not([hidden]) .lightbox-hint{
+    animation-duration:.001ms !important;
+    animation-delay:0ms !important;
+  }
+}
+
+/* ============================================================
+   四十一、多选提示横幅
+   ============================================================ */
+.multi-banner{
+  padding:10px 12px;
+  border-radius:8px;
+  background:var(--accent-soft);
+  border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
+}
+.multi-banner-inner{
+  display:flex;align-items:center;gap:8px;
+  font-size:12.5px;color:var(--accent);font-weight:600;
+}
+.multi-banner-inner i{font-size:13px;}
+.multi-banner-inner b{font-weight:700;}
+.multi-banner-inner #multi-clear{
+  margin-left:auto;padding:3px 10px;font-size:11.5px;
+  background:var(--panel);border:1px solid var(--border);color:var(--text);
+}
+.multi-banner-inner #multi-clear:hover{border-color:var(--accent);color:var(--accent);}
+.multi-banner .mini-note{margin-top:6px;color:var(--muted);}
+body[data-editor-mode="dark"] .multi-banner-inner #multi-clear{
+  background:#232837;border-color:#2a3140;
+}
+body[data-editor-mode="dark"] .multi-banner-inner #multi-clear:hover{
+  border-color:var(--accent);color:#f9a8d4;
+}
 </style>
 </head>
 <body data-editor-mode="light">
@@ -1762,7 +1938,7 @@ body[data-editor-mode="dark"] .canvas-wrap{background:#0a0d14;}
       · 选中块后<b>点击</b>左侧组件，会自动加入该块内部<br>
       · <b>右键块</b>显示菜单 · <b>双击画布空白</b>插入文本<br>
       · 拖动<b>页面到另一页面中段</b>可设置父子关系<br>
-      · 顶栏「主题」可切换 9 套网页风格 + 深浅色模式<br>
+      · 顶栏「主题」可切换 <b id="theme-count">—</b> 套网页风格 + 深浅色模式<br>
       · <kbd>Ctrl</kbd>+<kbd>P</kbd> 预览 · <kbd>?</kbd> 查看帮助
     </div>
   </aside>
@@ -2127,6 +2303,7 @@ const BASE_DOC_LIGHT = {
   '--doc-code-bg':'#f6f8fb',
   '--doc-code-border':'#e2e6ee',
   '--doc-code-inline-text':'#c4184f',
+  '--doc-code-text':'#383a42',
   '--doc-quote-border':'#d5dbe6',
   '--doc-quote-text':'#697182',
   '--doc-table-border':'#d8dee9',
@@ -2158,6 +2335,7 @@ const BASE_DOC_DARK = {
   '--doc-code-bg':'#0f1219',
   '--doc-code-border':'#2a3140',
   '--doc-code-inline-text':'#ff9ec9',
+  '--doc-code-text':'#ffffff',
   '--doc-quote-border':'#3a4152',
   '--doc-quote-text':'#a2abbb',
   '--doc-table-border':'#2a3140',
@@ -2479,30 +2657,16 @@ const STYLE_THEMES = {
       '--doc-radius':'4px'
     },
     light:{
-      '--doc-bg':'#0d1117',
-      '--doc-page-bg':'#0a0e0a',
-      '--doc-sidebar-bg':'#0a0e0a',
-      '--doc-border':'#1f3d24',
-      '--doc-shadow':'0 0 0 1px #1f3d24, 0 0 24px rgba(34,197,94,.15)',
-      '--doc-text':'#86efac',
-      '--doc-heading':'#22c55e',
-      '--doc-muted':'#4d7c56',
-      '--doc-accent':'#22c55e',
-      '--doc-link':'#4ade80',
-      '--doc-code-bg':'#05100a',
-      '--doc-code-border':'#1f3d24',
-      '--doc-code-inline-text':'#a3e635',
-      '--doc-surface-2':'#0f1a10',
-      '--doc-table-head-bg':'#0f1a10',
-      '--doc-table-border':'#1f3d24',
-      '--doc-quote-border':'#22c55e',
-      '--doc-quote-text':'#4d7c56',
-      '--doc-hljs-comment':'#4d7c56',
-      '--doc-hljs-keyword':'#22c55e',
-      '--doc-hljs-string':'#a3e635',
-      '--doc-hljs-number':'#facc15',
-      '--doc-hljs-title':'#4ade80',
-      '--doc-hljs-attr':'#f472b6'
+      '--doc-bg':'#f5f4e8','--doc-page-bg':'#fdfcf7','--doc-sidebar-bg':'#faf8f0',
+      '--doc-border':'#d4d0c0',
+      '--doc-shadow':'0 0 0 1px #d4d0c0, 0 0 24px rgba(21,128,61,.06)',
+      '--doc-text':'#1a3a1a','--doc-heading':'#15803d','--doc-muted':'#7a8568',
+      '--doc-accent':'#15803d','--doc-link':'#16a34a',
+      '--doc-code-bg':'#f0efe0','--doc-code-border':'#d4d0c0','--doc-code-inline-text':'#b45309','--doc-code-text':'#1a3a1a',
+      '--doc-surface-2':'#f0efe0','--doc-table-head-bg':'#ebe8d5','--doc-table-border':'#d4d0c0',
+      '--doc-quote-border':'#15803d','--doc-quote-text':'#4a5a3a',
+      '--doc-hljs-comment':'#8a9578','--doc-hljs-keyword':'#15803d','--doc-hljs-string':'#b45309',
+      '--doc-hljs-number':'#0369a1','--doc-hljs-title':'#0369a1','--doc-hljs-attr':'#dc2626'
     },
     dark:{
       '--doc-bg':'#0d1117',
@@ -2515,9 +2679,7 @@ const STYLE_THEMES = {
       '--doc-muted':'#4d7c56',
       '--doc-accent':'#22c55e',
       '--doc-link':'#4ade80',
-      '--doc-code-bg':'#05100a',
-      '--doc-code-border':'#1f3d24',
-      '--doc-code-inline-text':'#a3e635',
+      '--doc-code-bg':'#05100a','--doc-code-border':'#1f3d24','--doc-code-inline-text':'#a3e635','--doc-code-text':'#86efac',
       '--doc-surface-2':'#0f1a10',
       '--doc-table-head-bg':'#0f1a10',
       '--doc-table-border':'#1f3d24',
@@ -2531,7 +2693,7 @@ const STYLE_THEMES = {
       '--doc-hljs-attr':'#f472b6'
     },
     css:`
-%ROOT% .canvas,%ROOT% .doc-page{border:1px solid var(--doc-border) !important;border-radius:6px !important;box-shadow:0 0 0 1px var(--doc-border), 0 0 40px rgba(34,197,94,.12) !important;}
+%ROOT% .canvas,%ROOT% .doc-page{border:1px solid var(--doc-border) !important;border-radius:6px !important;box-shadow:0 0 0 1px var(--doc-border), 0 0 40px color-mix(in srgb,var(--doc-accent) 12%,transparent) !important;}
 %ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
 %ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
 %ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
@@ -2666,6 +2828,429 @@ const STYLE_THEMES = {
 %ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:2px !important;box-shadow:none !important;font-weight:400;}
 %ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:1px;background:var(--doc-border);}
 `
+  },
+
+  /* —— Fluent Design（Windows 11 亚克力风） —— */
+  fluent: {
+    label:'Fluent', desc:'Windows 11 亚克力 · 圆角 · 柔和阴影', tag:'微软',
+    swatch:['#0067c0','#ffffff','#f3f3f3'],
+    base:{ '--doc-radius':'8px' },
+    light:{
+      '--doc-bg':'#f3f3f3','--doc-page-bg':'#ffffff','--doc-sidebar-bg':'#f9f9f9',
+      '--doc-border':'#e5e5e5',
+      '--doc-shadow':'0 2px 8px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05)',
+      '--doc-accent':'#0067c0','--doc-link':'#0067c0',
+      '--doc-text':'#1a1a1a','--doc-heading':'#1a1a1a','--doc-muted':'#616161',
+      '--doc-code-bg':'#f6f6f6','--doc-code-border':'#e5e5e5','--doc-code-inline-text':'#c00000',
+      '--doc-surface-2':'#f6f6f6','--doc-table-head-bg':'#f0f0f0','--doc-table-border':'#e0e0e0',
+      '--doc-quote-border':'#0067c0','--doc-quote-text':'#525252'
+    },
+    dark:{
+      '--doc-bg':'#202020','--doc-page-bg':'#2b2b2b','--doc-sidebar-bg':'#252525',
+      '--doc-border':'#3d3d3d','--doc-shadow':'0 2px 8px rgba(0,0,0,.4)',
+      '--doc-text':'#e8e8e8','--doc-heading':'#ffffff','--doc-muted':'#a0a0a0',
+      '--doc-accent':'#60cdff','--doc-link':'#60cdff',
+      '--doc-code-bg':'#1f1f1f','--doc-code-border':'#3d3d3d','--doc-code-inline-text':'#ff99a4',
+      '--doc-surface-2':'#252525','--doc-table-head-bg':'#252525','--doc-table-border':'#3d3d3d',
+      '--doc-quote-border':'#60cdff','--doc-quote-text':'#b0b0b0'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border-radius:8px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:8px !important;box-shadow:0 1px 3px rgba(0,0,0,.06) !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:6px !important;font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+%ROOT% .canvas h1.blk-heading,%ROOT% .doc-content h1{font-weight:600;letter-spacing:-.01em;}
+%ROOT% .canvas h2.blk-heading,%ROOT% .doc-content h2{font-weight:600;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:1px;background:var(--doc-border);}
+`
+  },
+
+  /* —— Claymorphism（黏土拟态） —— */
+  clay: {
+    label:'黏土', desc:'柔软立体 · 大圆角 · 内外阴影', tag:'柔和',
+    swatch:['#8b5cf6','#fffbf7','#fef6f0'],
+    base:{ '--doc-radius':'28px' },
+    light:{
+      '--doc-bg':'#fef6f0','--doc-page-bg':'#fffbf7','--doc-sidebar-bg':'#fffbf7',
+      '--doc-border':'rgba(255,255,255,.5)',
+      '--doc-shadow':'6px 6px 16px var(--clay-lo), -6px -6px 16px var(--clay-hi)',
+      '--clay-hi':'rgba(255,255,255,.55)',
+      '--clay-lo':'rgba(180,150,210,.20)',
+      '--doc-accent':'#8b5cf6','--doc-link':'#7c3aed',
+      '--doc-text':'#3d2c5c','--doc-heading':'#2d1b4e','--doc-muted':'#9b8bb4',
+      '--doc-code-bg':'#faf5ff','--doc-code-border':'rgba(139,92,246,.15)','--doc-code-inline-text':'#7c3aed',
+      '--doc-surface-2':'#faf5ff','--doc-table-head-bg':'#f5edff','--doc-table-border':'rgba(139,92,246,.15)',
+      '--doc-quote-border':'#c4b5fd','--doc-quote-text':'#6b5b8a'
+    },
+    dark:{
+      '--doc-bg':'#1a1428','--doc-page-bg':'#231a35','--doc-sidebar-bg':'#1e1730',
+      '--doc-border':'rgba(255,255,255,.06)',
+      '--doc-shadow':'6px 6px 16px var(--clay-lo), -6px -6px 16px var(--clay-hi)',
+      '--clay-hi':'rgba(255,255,255,.09)',
+      '--clay-lo':'rgba(0,0,0,.5)',
+      '--doc-text':'#e0d4f5','--doc-heading':'#f3e8ff','--doc-muted':'#9b8bb4',
+      '--doc-accent':'#c4b5fd','--doc-link':'#c4b5fd',
+      '--doc-code-bg':'#1a1428','--doc-code-border':'rgba(196,181,253,.15)','--doc-code-inline-text':'#f0abfc',
+      '--doc-surface-2':'#1e1730','--doc-table-head-bg':'#1e1730','--doc-table-border':'rgba(196,181,253,.15)',
+      '--doc-quote-border':'#7c3aed','--doc-quote-text':'#b8a8d4'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border-radius:28px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block{border-radius:20px !important;box-shadow:inset 3px 3px 8px var(--clay-lo), inset -3px -3px 8px var(--clay-hi) !important;}
+%ROOT% .canvas .admonition,%ROOT% .doc-content .admonition{border-radius:20px !important;box-shadow:5px 5px 12px var(--clay-lo), -5px -5px 12px var(--clay-hi) !important;border:none !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:999px !important;box-shadow:4px 4px 9px var(--clay-lo), -4px -4px 9px var(--clay-hi) !important;border:none !important;}
+%ROOT% .canvas .blk-table,%ROOT% .doc-content table.blk-table{border-radius:20px !important;overflow:hidden;}
+%ROOT% .canvas .blk-image img,%ROOT% .doc-content img{border-radius:20px !important;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .canvas h2.blk-heading{font-weight:800;letter-spacing:-.02em;}
+`
+  },
+
+  /* —— Bento Grid（便当盒 · 苹果风卡片） —— */
+  bento: {
+    label:'便当盒', desc:'卡片网格 · 大圆角 · 暖橙强调', tag:'苹果',
+    swatch:['#ff6b35','#ffffff','#f5f5f7'],
+    base:{ '--doc-radius':'18px' },
+    light:{
+      '--doc-bg':'#f5f5f7','--doc-page-bg':'#ffffff','--doc-sidebar-bg':'#ffffff',
+      '--doc-border':'#e5e5ea',
+      '--doc-shadow':'0 4px 16px rgba(0,0,0,.06)',
+      '--doc-accent':'#ff6b35','--doc-link':'#e85d2a',
+      '--doc-text':'#1d1d1f','--doc-heading':'#1d1d1f','--doc-muted':'#86868b',
+      '--doc-code-bg':'#f5f5f7','--doc-code-border':'#e5e5ea','--doc-code-inline-text':'#d92d20',
+      '--doc-surface-2':'#f5f5f7','--doc-table-head-bg':'#f5f5f7','--doc-table-border':'#e5e5ea',
+      '--doc-quote-border':'#ff6b35','--doc-quote-text':'#6e6e73'
+    },
+    dark:{
+      '--doc-bg':'#000000','--doc-page-bg':'#1c1c1e','--doc-sidebar-bg':'#1c1c1e',
+      '--doc-border':'#2c2c2e','--doc-shadow':'0 4px 16px rgba(0,0,0,.4)',
+      '--doc-text':'#f5f5f7','--doc-heading':'#ffffff','--doc-muted':'#98989d',
+      '--doc-accent':'#ff8c5a','--doc-link':'#ff8c5a',
+      '--doc-code-bg':'#1c1c1e','--doc-code-border':'#2c2c2e','--doc-code-inline-text':'#ff7a6b',
+      '--doc-surface-2':'#1c1c1e','--doc-table-head-bg':'#1c1c1e','--doc-table-border':'#2c2c2e',
+      '--doc-quote-border':'#ff8c5a','--doc-quote-text':'#a1a1a6'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border-radius:24px !important;border:none !important;box-shadow:0 4px 16px rgba(0,0,0,.06) !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:16px !important;border:none !important;box-shadow:0 2px 8px rgba(0,0,0,.06) !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:12px !important;border:none !important;box-shadow:0 2px 6px rgba(0,0,0,.08) !important;font-weight:600;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .canvas h2.blk-heading{font-weight:700;letter-spacing:-.02em;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:1px;background:var(--doc-border);}
+`
+  },
+
+  /* —— Aurora（极光渐变） —— */
+  aurora: {
+    label:'极光', desc:'流动渐变 · 玻璃卡片 · 极光光晕', tag:'梦幻',
+    swatch:['#0891b2','#c7d2fe','#a5f3fc'],
+    base:{ '--doc-radius':'18px' },
+    light:{
+      '--doc-bg':'linear-gradient(120deg,#a5f3fc 0%,#c7d2fe 35%,#fbcfe8 70%,#bbf7d0 100%)',
+      '--doc-page-bg':'rgba(255,255,255,.72)','--doc-sidebar-bg':'rgba(255,255,255,.65)',
+      '--doc-border':'rgba(255,255,255,.6)',
+      '--doc-shadow':'0 8px 32px rgba(56,189,248,.18)',
+      '--doc-accent':'#0891b2','--doc-link':'#0e7490',
+      '--doc-text':'#0f172a','--doc-heading':'#0f172a','--doc-muted':'#475569',
+      '--doc-code-bg':'rgba(255,255,255,.5)','--doc-code-border':'rgba(255,255,255,.7)','--doc-code-inline-text':'#be185d',
+      '--doc-surface-2':'rgba(255,255,255,.45)','--doc-table-head-bg':'rgba(255,255,255,.6)','--doc-table-border':'rgba(255,255,255,.7)',
+      '--doc-quote-border':'rgba(8,145,178,.4)','--doc-quote-text':'#475569'
+    },
+    dark:{
+      '--doc-bg':'linear-gradient(120deg,#0c4a6e 0%,#1e1b4b 40%,#4c1d95 70%,#065f46 100%)',
+      '--doc-page-bg':'rgba(15,23,42,.6)','--doc-sidebar-bg':'rgba(15,23,42,.55)',
+      '--doc-border':'rgba(148,163,184,.22)',
+      '--doc-shadow':'0 8px 32px rgba(0,0,0,.5)',
+      '--doc-text':'#e2e8f0','--doc-heading':'#f8fafc','--doc-muted':'#94a3b8',
+      '--doc-accent':'#67e8f9','--doc-link':'#67e8f9',
+      '--doc-code-bg':'rgba(15,23,42,.6)','--doc-code-border':'rgba(148,163,184,.2)','--doc-code-inline-text':'#f0abfc',
+      '--doc-surface-2':'rgba(15,23,42,.5)','--doc-table-head-bg':'rgba(30,41,59,.7)','--doc-table-border':'rgba(148,163,184,.2)',
+      '--doc-quote-border':'rgba(103,232,249,.4)','--doc-quote-text':'#cbd5e1'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--doc-border) !important;border-radius:18px !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content img{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:999px !important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+%ROOT% .canvas h1.blk-heading,%ROOT% .doc-content h1{text-shadow:0 2px 12px rgba(56,189,248,.3);}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:2px;background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6);border:none;border-radius:2px;}
+`
+  },
+
+  /* —— Cyberpunk（赛博朋克霓虹） —— */
+  cyberpunk: {
+    label:'赛博朋克', desc:'霓虹绿粉 · 深黑 · 高对比', tag:'霓虹',
+    swatch:['#00ffc8','#12121a','#0a0a0f'],
+    base:{ '--doc-radius':'2px','--doc-font-family':'"JetBrains Mono","Roboto Mono",Consolas,monospace','--doc-font-size':'14px' },
+    light:{
+      '--doc-bg':'#f4f4fa','--doc-page-bg':'#ffffff','--doc-sidebar-bg':'#fafaff',
+      '--doc-border':'#d4d4e2',
+      '--doc-shadow':'0 0 0 1px #00c8a0, 0 0 24px rgba(0,200,160,.12)',
+      '--doc-text':'#1a1a2e','--doc-heading':'#00a080','--doc-muted':'#6a6a8a',
+      '--doc-accent':'#00a080','--doc-link':'#d91a7a',
+      '--doc-code-bg':'#f0fdf9','--doc-code-border':'#00a080','--doc-code-inline-text':'#d91a7a','--doc-code-text':'#1a1a2e',
+      '--doc-surface-2':'#f0fdf9','--doc-table-head-bg':'#e6fbf5','--doc-table-border':'#00a080',
+      '--doc-quote-border':'#d91a7a','--doc-quote-text':'#5a5a7a',
+      '--doc-hljs-comment':'#8a8aa0','--doc-hljs-keyword':'#d91a7a','--doc-hljs-string':'#008060',
+      '--doc-hljs-number':'#b8860b','--doc-hljs-title':'#0090c0','--doc-hljs-attr':'#c94a80'
+    },
+    dark:{
+      '--doc-bg':'#0a0a0f','--doc-page-bg':'#12121a','--doc-sidebar-bg':'#0e0e15',
+      '--doc-border':'#1f1f2e',
+      '--doc-shadow':'0 0 0 1px #00ffc8, 0 0 30px rgba(0,255,200,.15)',
+      '--doc-text':'#e0e0ff','--doc-heading':'#00ffc8','--doc-muted':'#7a7a9e',
+      '--doc-accent':'#00ffc8','--doc-link':'#ff2e97',
+      '--doc-code-bg':'#050510','--doc-code-border':'#00ffc8','--doc-code-inline-text':'#ff2e97','--doc-code-text':'#ffffff',
+      '--doc-surface-2':'#0e0e15','--doc-table-head-bg':'#0e0e15','--doc-table-border':'#00ffc8',
+      '--doc-quote-border':'#ff2e97','--doc-quote-text':'#a0a0c0',
+      '--doc-hljs-comment':'#5a5a7a','--doc-hljs-keyword':'#ff2e97','--doc-hljs-string':'#00ffc8',
+      '--doc-hljs-number':'#f7e600','--doc-hljs-title':'#00d4ff','--doc-hljs-attr':'#ff6b9d'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border:2px solid var(--doc-border) !important;border-radius:2px !important;position:relative;overflow:hidden;}
+%ROOT% .canvas::after,%ROOT% .doc-page::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,color-mix(in srgb,var(--doc-accent) 8%,transparent) 0 1px,transparent 1px 3px);z-index:1;}
+%ROOT% .canvas > *,%ROOT% .doc-page > *{position:relative;z-index:2;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:2px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:2px !important;text-transform:uppercase;letter-spacing:.08em;font-weight:800;border:1px solid currentColor !important;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .canvas h2.blk-heading,%ROOT% .doc-content h1,%ROOT% .doc-content h2{text-shadow:0 0 12px currentColor;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:2px;background:var(--doc-accent);box-shadow:0 0 8px var(--doc-accent);}
+`
+  },
+
+  /* —— Vaporwave（蒸汽波复古 80s） —— */
+  vaporwave: {
+    label:'蒸汽波', desc:'粉紫渐变 · 复古 80s · 霓虹', tag:'复古',
+    swatch:['#ff6ec7','#1a0b2e','#2d1b4e'],
+    base:{ '--doc-radius':'4px' },
+    light:{
+      '--doc-bg':'linear-gradient(135deg,#e0d4f5 0%,#fce4ec 50%,#e0f7fa 100%)',
+      '--doc-page-bg':'rgba(255,255,255,.82)','--doc-sidebar-bg':'rgba(255,255,255,.72)',
+      '--doc-border':'rgba(255,255,255,.85)',
+      '--doc-shadow':'0 4px 20px rgba(255,110,199,.18)',
+      '--doc-text':'#2d1b4e','--doc-heading':'#0891b2','--doc-muted':'#8a7aa8',
+      '--doc-accent':'#d946a8','--doc-link':'#0891b2',
+      '--doc-code-bg':'rgba(255,255,255,.6)','--doc-code-border':'rgba(180,140,220,.4)','--doc-code-inline-text':'#d946a8','--doc-code-text':'#2d1b4e',
+      '--doc-surface-2':'rgba(255,255,255,.5)','--doc-table-head-bg':'rgba(240,220,255,.6)','--doc-table-border':'rgba(180,140,220,.35)',
+      '--doc-quote-border':'#0891b2','--doc-quote-text':'#6b5b8a',
+      '--doc-hljs-comment':'#9b8bb4','--doc-hljs-keyword':'#d946a8','--doc-hljs-string':'#0891b2',
+      '--doc-hljs-number':'#b8860b','--doc-hljs-title':'#7c3aed','--doc-hljs-attr':'#c94a80'
+    },
+    dark:{
+      '--doc-bg':'linear-gradient(135deg,#2d1b4e 0%,#5b2a86 50%,#ff6ec7 100%)',
+      '--doc-page-bg':'#1a0b2e','--doc-sidebar-bg':'#1a0b2e',
+      '--doc-border':'#3d1f5c',
+      '--doc-shadow':'0 0 0 1px #ff6ec7, 0 0 40px rgba(255,110,199,.3)',
+      '--doc-text':'#e0d4f5','--doc-heading':'#05d9e8','--doc-muted':'#9b7fbf',
+      '--doc-accent':'#ff6ec7','--doc-link':'#05d9e8',
+      '--doc-code-bg':'#12071f','--doc-code-border':'#3d1f5c','--doc-code-inline-text':'#ff6ec7','--doc-code-text':'#ffffff',
+      '--doc-surface-2':'#12071f','--doc-table-head-bg':'#12071f','--doc-table-border':'#3d1f5c',
+      '--doc-quote-border':'#05d9e8','--doc-quote-text':'#b8a8d4',
+      '--doc-hljs-comment':'#7a5a9a','--doc-hljs-keyword':'#ff6ec7','--doc-hljs-string':'#05d9e8',
+      '--doc-hljs-number':'#f7e600','--doc-hljs-title':'#b794f6','--doc-hljs-attr':'#ff2e97'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border:1px solid var(--doc-border) !important;border-radius:4px !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:4px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:4px !important;text-transform:uppercase;letter-spacing:.1em;font-weight:700;box-shadow:0 0 12px currentColor;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .canvas h2.blk-heading,%ROOT% .doc-content h1,%ROOT% .doc-content h2{text-shadow:0 0 16px currentColor;letter-spacing:.02em;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:2px;background:linear-gradient(90deg,var(--doc-accent),var(--doc-link));border:none;box-shadow:0 0 10px var(--doc-accent);}
+`
+  },
+
+  /* —— Nordic（北欧极简 · 冷色调） —— */
+  nordic: {
+    label:'北欧', desc:'冷色调 · 浅灰 · 蓝绿强调', tag:'自然',
+    swatch:['#5e81ac','#ffffff','#eceff4'],
+    base:{ '--doc-radius':'6px' },
+    light:{
+      '--doc-bg':'#eceff4','--doc-page-bg':'#ffffff','--doc-sidebar-bg':'#f8fafc',
+      '--doc-border':'#d8dee9',
+      '--doc-shadow':'0 2px 8px rgba(46,52,64,.06)',
+      '--doc-accent':'#5e81ac','--doc-link':'#5e81ac',
+      '--doc-text':'#2e3440','--doc-heading':'#2e3440','--doc-muted':'#7b869a',
+      '--doc-code-bg':'#f2f4f8','--doc-code-border':'#d8dee9','--doc-code-inline-text':'#bf616a',
+      '--doc-surface-2':'#f2f4f8','--doc-table-head-bg':'#e5e9f0','--doc-table-border':'#d8dee9',
+      '--doc-quote-border':'#8fbcbb','--doc-quote-text':'#4c566a'
+    },
+    dark:{
+      '--doc-bg':'#2e3440','--doc-page-bg':'#3b4252','--doc-sidebar-bg':'#353b48',
+      '--doc-border':'#4c566a','--doc-shadow':'0 2px 8px rgba(0,0,0,.35)',
+      '--doc-text':'#e5e9f0','--doc-heading':'#eceff4','--doc-muted':'#8b95a7',
+      '--doc-accent':'#88c0d0','--doc-link':'#88c0d0',
+      '--doc-code-bg':'#2e3440','--doc-code-border':'#4c566a','--doc-code-inline-text':'#bf616a',
+      '--doc-surface-2':'#353b48','--doc-table-head-bg':'#353b48','--doc-table-border':'#4c566a',
+      '--doc-quote-border':'#8fbcbb','--doc-quote-text':'#a3adc0'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border-radius:6px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:6px !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:6px !important;font-weight:500;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .doc-content h1{font-weight:300;letter-spacing:-.02em;}
+%ROOT% .canvas h2.blk-heading,%ROOT% .doc-content h2{font-weight:400;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:1px;background:var(--doc-border);}
+`
+  },
+
+  /* —— Carbon（IBM Carbon 专业深色） —— */
+  carbon: {
+    label:'Carbon', desc:'IBM 设计系统 · 专业深色 · 蓝色强调', tag:'企业',
+    swatch:['#0f62fe','#262626','#161616'],
+    base:{ '--doc-radius':'0px','--doc-font-family':'"IBM Plex Sans","Roboto",-apple-system,sans-serif' },
+    light:{
+      '--doc-bg':'#f4f4f4','--doc-page-bg':'#ffffff','--doc-sidebar-bg':'#f4f4f4',
+      '--doc-border':'#e0e0e0',
+      '--doc-shadow':'none',
+      '--doc-text':'#161616','--doc-heading':'#161616','--doc-muted':'#6f6f6f',
+      '--doc-accent':'#0f62fe','--doc-link':'#0043ce',
+      '--doc-code-bg':'#f4f4f4','--doc-code-border':'#e0e0e0','--doc-code-inline-text':'#d02670','--doc-code-text':'#161616',
+      '--doc-surface-2':'#f4f4f4','--doc-table-head-bg':'#e8e8e8','--doc-table-border':'#e0e0e0',
+      '--doc-quote-border':'#0f62fe','--doc-quote-text':'#525252'
+    },
+    dark:{
+      '--doc-bg':'#161616','--doc-page-bg':'#262626','--doc-sidebar-bg':'#1f1f1f',
+      '--doc-border':'#393939','--doc-shadow':'none',
+      '--doc-text':'#f4f4f4','--doc-heading':'#ffffff','--doc-muted':'#8d8d8d',
+      '--doc-accent':'#0f62fe','--doc-link':'#78a9ff',
+      '--doc-code-bg':'#161616','--doc-code-border':'#393939','--doc-code-inline-text':'#ff7eb6','--doc-code-text':'#f4f4f4',
+      '--doc-surface-2':'#1f1f1f','--doc-table-head-bg':'#1f1f1f','--doc-table-border':'#393939',
+      '--doc-quote-border':'#0f62fe','--doc-quote-text':'#a8a8a8'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border-radius:0 !important;box-shadow:none !important;border:none !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:0 !important;border-left:3px solid var(--doc-accent) !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:0 !important;font-weight:500;letter-spacing:.02em;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .doc-content h1{font-weight:400;letter-spacing:0;}
+%ROOT% .canvas h2.blk-heading,%ROOT% .doc-content h2{font-weight:400;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:1px;background:var(--doc-border);}
+`
+  },
+
+  /* —— Dracula（经典暗色主题） —— */
+  dracula: {
+    label:'Dracula', desc:'紫粉青 · 经典暗色 · 高对比', tag:'暗色',
+    swatch:['#bd93f9','#282a36','#1e1f29'],
+    base:{ '--doc-radius':'6px' },
+    light:{
+      '--doc-bg':'#f5f5f5','--doc-page-bg':'#ffffff','--doc-sidebar-bg':'#fafafa',
+      '--doc-border':'#e0e0e0',
+      '--doc-shadow':'0 4px 16px rgba(40,42,54,.08)',
+      '--doc-text':'#1f1f1f','--doc-heading':'#1f1f1f','--doc-muted':'#6c664b',
+      '--doc-accent':'#644ac9','--doc-link':'#036a96',
+      '--doc-code-bg':'#f0f0f0','--doc-code-border':'#e0e0e0','--doc-code-inline-text':'#a3144d','--doc-code-text':'#1f1f1f',
+      '--doc-surface-2':'#f0f0f0','--doc-table-head-bg':'#ececec','--doc-table-border':'#e0e0e0',
+      '--doc-quote-border':'#644ac9','--doc-quote-text':'#4a4a4a',
+      '--doc-hljs-comment':'#6c664b','--doc-hljs-keyword':'#a3144d','--doc-hljs-string':'#14710a',
+      '--doc-hljs-number':'#644ac9','--doc-hljs-title':'#036a96','--doc-hljs-attr':'#a34d14'
+    },
+    dark:{
+      '--doc-bg':'#1e1f29','--doc-page-bg':'#282a36','--doc-sidebar-bg':'#21222c',
+      '--doc-border':'#44475a','--doc-shadow':'0 4px 20px rgba(0,0,0,.4)',
+      '--doc-text':'#f8f8f2','--doc-heading':'#f8f8f2','--doc-muted':'#6272a4',
+      '--doc-accent':'#bd93f9','--doc-link':'#8be9fd',
+      '--doc-code-bg':'#21222c','--doc-code-border':'#44475a','--doc-code-inline-text':'#ff79c6','--doc-code-text':'#f8f8f2',
+      '--doc-surface-2':'#21222c','--doc-table-head-bg':'#21222c','--doc-table-border':'#44475a',
+      '--doc-quote-border':'#ff79c6','--doc-quote-text':'#b8b8d0',
+      '--doc-hljs-comment':'#6272a4','--doc-hljs-keyword':'#ff79c6','--doc-hljs-string':'#f1fa8c',
+      '--doc-hljs-number':'#bd93f9','--doc-hljs-title':'#50fa7b','--doc-hljs-attr':'#8be9fd'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border-radius:6px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:6px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:6px !important;font-weight:600;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .canvas h2.blk-heading{font-weight:700;letter-spacing:-.01em;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:2px;background:linear-gradient(90deg,var(--doc-accent),var(--doc-link));border:none;border-radius:2px;}
+`
+  },
+
+  /* —— Linear（现代 SaaS · 紫罗兰） —— */
+  linear: {
+    label:'Linear', desc:'现代 SaaS · 深色 · 紫罗兰强调', tag:'SaaS',
+    swatch:['#5e6ad2','#16171d','#0f1014'],
+    base:{ '--doc-radius':'8px','--doc-font-family':'"Inter","Roboto",-apple-system,sans-serif' },
+    light:{
+      '--doc-bg':'#fafafa','--doc-page-bg':'#ffffff','--doc-sidebar-bg':'#f4f4f5',
+      '--doc-border':'#e5e7eb',
+      '--doc-shadow':'0 4px 20px rgba(15,16,20,.06)',
+      '--doc-text':'#1a1a1a','--doc-heading':'#000000','--doc-muted':'#6b7280',
+      '--doc-accent':'#5e6ad2','--doc-link':'#4c5bc7',
+      '--doc-code-bg':'#f4f4f5','--doc-code-border':'#e5e7eb','--doc-code-inline-text':'#a21caf','--doc-code-text':'#1a1a1a',
+      '--doc-surface-2':'#f4f4f5','--doc-table-head-bg':'#f4f4f5','--doc-table-border':'#e5e7eb',
+      '--doc-quote-border':'#5e6ad2','--doc-quote-text':'#4b5563',
+      '--doc-hljs-comment':'#9ca3af','--doc-hljs-keyword':'#7c3aed','--doc-hljs-string':'#15803d',
+      '--doc-hljs-number':'#b45309','--doc-hljs-title':'#1d4ed8','--doc-hljs-attr':'#b91c1c'
+    },
+    dark:{
+      '--doc-bg':'#0f1014','--doc-page-bg':'#16171d','--doc-sidebar-bg':'#121318',
+      '--doc-border':'#26282f','--doc-shadow':'0 4px 24px rgba(0,0,0,.5)',
+      '--doc-text':'#e6e6e8','--doc-heading':'#ffffff','--doc-muted':'#8a8f98',
+      '--doc-accent':'#5e6ad2','--doc-link':'#7c8aff',
+      '--doc-code-bg':'#0f1014','--doc-code-border':'#26282f','--doc-code-inline-text':'#f0abfc','--doc-code-text':'#ffffff',
+      '--doc-surface-2':'#121318','--doc-table-head-bg':'#121318','--doc-table-border':'#26282f',
+      '--doc-quote-border':'#5e6ad2','--doc-quote-text':'#a8adb8',
+      '--doc-hljs-comment':'#5a5f6a','--doc-hljs-keyword':'#c792ea','--doc-hljs-string':'#a5e075',
+      '--doc-hljs-number':'#f0a45d','--doc-hljs-title':'#82aaff','--doc-hljs-attr':'#ff8a80'
+    },
+    css:`
+%ROOT% .canvas,%ROOT% .doc-page{border-radius:8px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-code-wrap,%ROOT% .canvas .blk-codeblk .cb-md-preview,%ROOT% .canvas .blk-toc,
+%ROOT% .canvas .tree-block,%ROOT% .canvas .page-embed-block,%ROOT% .canvas .admonition,
+%ROOT% .canvas .blk-table,%ROOT% .canvas .blk-image img,
+%ROOT% .doc-content .blk-code-wrap,%ROOT% .doc-content .code-block,%ROOT% .doc-content .blk-toc,
+%ROOT% .doc-content .tree-block,%ROOT% .doc-content .page-embed-block,%ROOT% .doc-content .admonition,
+%ROOT% .doc-content table.blk-table,%ROOT% .doc-content img{border-radius:8px !important;border:1px solid var(--doc-border) !important;}
+%ROOT% .canvas .blk-trigger,%ROOT% .canvas .blk-pagelink,%ROOT% .canvas .blk-extlink,
+%ROOT% .doc-content a.ext-link,%ROOT% .doc-content a.page-link,%ROOT% .doc-content .blk-trigger{border-radius:6px !important;font-weight:500;}
+%ROOT% .canvas h1.blk-heading,%ROOT% .canvas h2.blk-heading{font-weight:600;letter-spacing:-.02em;}
+%ROOT% .canvas .blk-hr,%ROOT% .doc-content hr.hr-themed{height:1px;background:var(--doc-border);}
+`
   }
 };
 
@@ -2769,7 +3354,8 @@ DARK_MQ.addEventListener('change', () => {
 const state = {
   pages: [],
   currentId: null,
-  selected: null,
+  selected: null,           // 主选中块（属性面板以此为准）
+  selectedSet: new Set(),   // 全部选中块的 uid（含主选中块）
   docTitle: '文档',
   theme: 'default',
   mode: 'auto',
@@ -2831,11 +3417,22 @@ function isDescendant(candidate, node){
 /* ============================================================
  *  代码高亮 / 数学公式 / Markdown
  * ============================================================ */
+function codeTextOf(codeEl){
+  if (!codeEl) return '';
+  const clone = codeEl.cloneNode(true);
+  clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+  clone.querySelectorAll('div, p, pre').forEach(el => {
+    el.prepend(document.createTextNode('\n'));
+    el.append(document.createTextNode('\n'));
+  });
+  return clone.textContent || '';
+}
+
 function highlightCode(codeEl){
   if (typeof hljs === 'undefined' || !codeEl) return;
   if (document.activeElement === codeEl) return;
   const lang = codeEl.dataset.lang || 'plaintext';
-  const text = codeEl.textContent || '';
+  const text = codeTextOf(codeEl);
   delete codeEl.dataset.highlighted;
   codeEl.className = (lang && lang !== 'plaintext') ? ('language-' + lang) : '';
   codeEl.textContent = text;
@@ -3098,6 +3695,8 @@ function restoreSnapshot(snap){
   state.currentId = null;
   switchPage(cur.id);
 
+  state.selected = null;
+  state.selectedSet.clear();
   if (snap.selectedUid){
     const el = canvas.querySelector('.block[data-uid="' + snap.selectedUid + '"]');
     if (el) selectBlock(el);
@@ -3212,6 +3811,7 @@ function switchPage(id){
   wrapEl.appendChild(page.el);
   canvas = page.el;
   state.selected = null;
+  state.selectedSet.clear();
   renderProps();
   renderPageList();
   updateStatusBar();
@@ -4018,6 +4618,14 @@ wrapEl.addEventListener('paste', e => {
   const html = cd.getData('text/html');
   let toInsert;
 
+  const inCode = target.closest && target.closest('.blk-code code');
+  if (inCode){
+    /* 代码块内粘贴：只保留纯文本，换行用 \n（配合 white-space:pre-wrap 正确渲染） */
+    const plain = (text || '').replace(/\r\n?/g, '\n');
+    document.execCommand('insertText', false, plain);
+    scheduleHistory();
+    return;
+  }
   if (html && html.trim()){
     toInsert = sanitizePastedHTML(html);
     if (!toInsert.trim() && text){
@@ -4448,12 +5056,8 @@ wrapEl.addEventListener('click', e => {
     e.stopPropagation();
     const block = btn.closest('.block');
     const act = btn.dataset.act;
-    if (act === 'del'){
-      if (block === state.selected){ state.selected = null; }
-      block.remove();
-      renderProps();
-      pushHistory();
-    } else if (act === 'dup'){ duplicateBlock(block); }
+    if (act === 'del'){ deleteWithContext(block); }
+    else if (act === 'dup'){ duplicateWithContext(block); }
     else if (act === 'up'){ moveBlock(block, 'up'); }
     else if (act === 'down'){ moveBlock(block, 'down'); }
     return;
@@ -4461,7 +5065,14 @@ wrapEl.addEventListener('click', e => {
 
   if (e.target.closest('.pageembed-body')) return;
   const block = e.target.closest('.block');
-  selectBlock(block && canvas && canvas.contains(block) ? block : null);
+  const clickable = (block && canvas && canvas.contains(block)) ? block : null;
+  const multi = e.ctrlKey || e.metaKey;
+  if (clickable){
+    selectBlock(clickable, { add: multi });
+  } else if (!multi){
+    /* 普通点空白清空选择；Ctrl+点空白保留选择 */
+    selectBlock(null);
+  }
 });
 
 /* —— 双击画布空白：快速插入文本块 —— */
@@ -4520,15 +5131,10 @@ ctxMenu.addEventListener('click', e => {
       if (editable){ editable.focus(); document.execCommand('selectAll', false, null); }
     }
   } else if (act === 'select'){ selectBlock(block); }
-  else if (act === 'dup'){ duplicateBlock(block); }
+  else if (act === 'dup'){ duplicateWithContext(block); }
   else if (act === 'up'){ moveBlock(block, 'up'); }
   else if (act === 'down'){ moveBlock(block, 'down'); }
-  else if (act === 'del'){
-    if (block === state.selected) state.selected = null;
-    block.remove();
-    renderProps();
-    pushHistory();
-  }
+  else if (act === 'del'){ deleteWithContext(block); }
   hideCtxMenu();
 });
 document.addEventListener('click', e => {
@@ -4574,26 +5180,107 @@ document.querySelectorAll('[data-close]').forEach(el => {
 /* ============================================================
  *  块操作
  * ============================================================ */
-function selectBlock(block){
-  if (canvas) canvas.querySelectorAll('.block.selected').forEach(b => b.classList.remove('selected'));
-  state.selected = block;
-  if (block) block.classList.add('selected');
+function selectBlock(block, opts){
+  opts = opts || {};
+  const add = !!opts.add;
+
+  if (!block){
+    if (canvas) canvas.querySelectorAll('.block.selected').forEach(b => b.classList.remove('selected'));
+    state.selected = null;
+    state.selectedSet.clear();
+    renderProps();
+    return;
+  }
+
+  if (add){
+    const uid = block.dataset.uid;
+    if (state.selectedSet.has(uid) && state.selectedSet.size > 1){
+      /* 从集合中移除 */
+      state.selectedSet.delete(uid);
+      block.classList.remove('selected');
+      /* 主选中若被移除，换为集合中的最后一块 */
+      if (state.selected === block){
+        const lastUid = [...state.selectedSet].pop();
+        state.selected = canvas ? canvas.querySelector('.block[data-uid="' + lastUid + '"]') : null;
+      }
+    } else {
+      state.selectedSet.add(uid);
+      block.classList.add('selected');
+      state.selected = block;
+    }
+  } else {
+    if (canvas) canvas.querySelectorAll('.block.selected').forEach(b => b.classList.remove('selected'));
+    state.selectedSet.clear();
+    state.selectedSet.add(block.dataset.uid);
+    block.classList.add('selected');
+    state.selected = block;
+  }
   renderProps();
 }
+function selectedBlocks(){
+  if (!canvas) return [];
+  const out = [];
+  const stale = [];
+  state.selectedSet.forEach(uid => {
+    const el = canvas.querySelector('.block[data-uid="' + uid + '"]');
+    if (el) out.push(el); else stale.push(uid);
+  });
+  stale.forEach(uid => state.selectedSet.delete(uid));
+  return out;
+}
+function duplicateBlocks(blocks){
+  if (!blocks || !blocks.length) return;
+  const clones = [];
+  blocks.forEach(block => {
+    const clone = block.cloneNode(true);
+    clone.classList.remove('selected');
+    clone.dataset.uid = 'b' + (++blockCounter);
+    clone.querySelectorAll('.block[data-uid]').forEach(b => { b.dataset.uid = 'b' + (++blockCounter); });
+    block.after(clone);
+    clones.push(clone);
+    if (clone.dataset.type === 'code') setTimeout(() => highlightAllCode(clone), 60);
+    if (clone.dataset.type === 'math') setTimeout(() => renderAllMath(clone), 60);
+    if (clone.dataset.type === 'markdown') setTimeout(() => renderAllCodeBlocks(clone), 60);
+    if (clone.dataset.type === 'pageembed'){
+      const main = clone.querySelector('.blk-pageembed');
+      if (main) renderPageEmbed(main, 0);
+    }
+  });
+  /* 选中所有新克隆（保持与源集合一致） */
+  if (canvas) canvas.querySelectorAll('.block.selected').forEach(b => b.classList.remove('selected'));
+  state.selectedSet.clear();
+  clones.forEach(c => {
+    c.classList.add('selected');
+    state.selectedSet.add(c.dataset.uid);
+  });
+  state.selected = clones[clones.length - 1] || null;
+  renderProps();
+  pushHistory();
+}
 function duplicateBlock(block){
-  const clone = block.cloneNode(true);
-  clone.classList.remove('selected');
-  clone.dataset.uid = 'b' + (++blockCounter);
-  clone.querySelectorAll('.block[data-uid]').forEach(b => { b.dataset.uid = 'b' + (++blockCounter); });
-  block.after(clone);
-  if (clone.dataset.type === 'code') setTimeout(() => highlightAllCode(clone), 60);
-  if (clone.dataset.type === 'math') setTimeout(() => renderAllMath(clone), 60);
-  if (clone.dataset.type === 'markdown') setTimeout(() => renderAllCodeBlocks(clone), 60);
-  if (clone.dataset.type === 'pageembed'){
-    const main = clone.querySelector('.blk-pageembed');
-    if (main) renderPageEmbed(main, 0);
+  if (!block) return;
+  duplicateBlocks([block]);
+}
+
+/* —— 组合操作：单个块若在多选集合里，就作用于整个选择 —— */
+function duplicateWithContext(block){
+  if (block && state.selectedSet.has(block.dataset.uid) && state.selectedSet.size > 1){
+    duplicateBlocks(selectedBlocks());
+  } else {
+    duplicateBlock(block);
   }
-  selectBlock(clone);
+}
+function deleteWithContext(block){
+  if (block && state.selectedSet.has(block.dataset.uid) && state.selectedSet.size > 1){
+    selectedBlocks().forEach(b => b.remove());
+    state.selected = null;
+    state.selectedSet.clear();
+  } else {
+    if (block === state.selected) state.selected = null;
+    if (block) state.selectedSet.delete(block.dataset.uid);
+    if (block) block.remove();
+  }
+  renderProps();
   pushHistory();
 }
 function moveBlock(block, dir){
@@ -4642,7 +5329,7 @@ wrapEl.addEventListener('focusin', e => {
   if (!codeEl || codeEl.tagName !== 'CODE' || !codeEl.closest('.blk-code')) return;
   if (codeEl.dataset.highlighted !== 'yes') return;
   const lang = codeEl.dataset.lang || 'plaintext';
-  const text = codeEl.textContent || '';
+  const text = codeTextOf(codeEl);
   delete codeEl.dataset.highlighted;
   codeEl.className = lang && lang !== 'plaintext' ? ('language-' + lang) : '';
   codeEl.textContent = text;
@@ -4985,6 +5672,18 @@ function renderProps(){
   const curHover = state.selected.dataset.hoverAnim || '';
   const isVisible = state.selected.dataset.visible !== 'false';
   let html = '';
+
+  /* —— 多选提示横幅 —— */
+  if (state.selectedSet.size > 1){
+    html += `<div class="prop-group multi-banner">
+      <div class="multi-banner-inner">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>已选中 <b>${state.selectedSet.size}</b> 个块</span>
+        <button class="btn" id="multi-clear" title="取消多选"><i class="fa-solid fa-xmark"></i>取消</button>
+      </div>
+      <div class="mini-note">下方属性作用于主选中块；删除 / 复制等操作会作用于全部选中块。</div>
+    </div>`;
+  }
 
   html += `<div class="prop-group"><label>初始显示状态</label>
     <label class="switch">
@@ -5348,6 +6047,18 @@ function renderPageProps(){
 propsEl.addEventListener('mousedown', e => { if (e.target.closest('[data-cmd]')) e.preventDefault(); });
 
 propsEl.addEventListener('click', async e => {
+  if (e.target.closest('#multi-clear')){
+    /* 保留主选中块，其余取消 */
+    const keep = state.selected;
+    if (canvas) canvas.querySelectorAll('.block.selected').forEach(b => b.classList.remove('selected'));
+    state.selectedSet.clear();
+    if (keep){
+      keep.classList.add('selected');
+      state.selectedSet.add(keep.dataset.uid);
+    }
+    renderProps();
+    return;
+  }
   if (e.target.closest('#page-open-theme')){ openThemeModal(); return; }
 
   /* —— 页面背景相关 —— */
@@ -5522,9 +6233,11 @@ propsEl.addEventListener('click', async e => {
 
   /* —— 删除块 —— */
   if (e.target.id === 'prop-del'){
-    const b = state.selected;
+    const blocks = selectedBlocks();
+    if (!blocks.length) return;
+    blocks.forEach(b => b.remove());
     state.selected = null;
-    b.remove();
+    state.selectedSet.clear();
     renderProps();
     pushHistory();
   }
@@ -6071,10 +6784,10 @@ document.getElementById('btn-mode').addEventListener('click', () => {
 })();
 
 document.getElementById('theme-reset-all').addEventListener('click', async () => {
-  const ok = await uiConfirm('恢复默认风格、浅色模式并清空自定义 CSS？', '恢复默认外观');
+  const ok = await uiConfirm('恢复默认风格、跟随系统模式并清空自定义 CSS？', '恢复默认外观');
   if (!ok) return;
   state.theme = 'default';
-  state.mode = 'light';
+  state.mode = 'auto';
   state.customCSS = '';
   const ta = document.getElementById('theme-custom-css');
   if (ta) ta.value = '';
@@ -6633,7 +7346,7 @@ blockquote.blk-quote{border-left:4px solid var(--doc-quote-border,#d5dbe6);margi
 pre{margin:0;padding:14px 16px;overflow-x:auto;font-size:13px;background:transparent;white-space:pre-wrap;word-break:break-word;font-family:"Roboto Mono",Consolas,monospace;}
 code{font-family:"Roboto Mono",Consolas,monospace;white-space:pre-wrap;word-break:break-word;}
 pre code{background:transparent !important;border:none !important;padding:0 !important;color:inherit;font-size:inherit;white-space:pre-wrap;word-break:break-word;}
-.hljs{background:transparent !important;}
+.hljs{color:var(--doc-code-text,#383a42);background:transparent !important;}
 .hljs-comment,.hljs-quote{color:var(--doc-hljs-comment,#a0a1a7);font-style:italic;}
 .hljs-keyword,.hljs-selector-tag,.hljs-literal,.hljs-doctag,.hljs-name,.hljs-strong{color:var(--doc-hljs-keyword,#a626a4);}
 .hljs-string,.hljs-regexp,.hljs-attribute{color:var(--doc-hljs-string,#50a14f);}
@@ -7983,7 +8696,7 @@ document.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'p'){ e.preventDefault(); openPreview(); return; }
   if (e.key.toLowerCase() === 'f' && e.shiftKey){ e.preventDefault(); toggleFullscreen(); return; }
   if (e.key.toLowerCase() === 't' && e.shiftKey){ e.preventDefault(); openThemeModal(); return; }
-  if (e.key.toLowerCase() === 'd' && state.selected){ e.preventDefault(); duplicateBlock(state.selected); return; }
+  if (e.key.toLowerCase() === 'd' && state.selectedSet.size){ e.preventDefault(); duplicateBlocks(selectedBlocks()); return; }
   if (e.key.toLowerCase() === 'k' && isEditable){ e.preventDefault(); insertLink(); return; }
   if (e.key === 'ArrowUp' && state.selected && !isEditable && !isTextArea){ e.preventDefault(); moveBlock(state.selected, 'up'); return; }
   if (e.key === 'ArrowDown' && state.selected && !isEditable && !isTextArea){ e.preventDefault(); moveBlock(state.selected, 'down'); return; }
@@ -7992,11 +8705,12 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Delete') return;
   if (document.activeElement && document.activeElement.isContentEditable) return;
   if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') return;
-  if (!state.selected) return;
+  const blocks = selectedBlocks();
+  if (!blocks.length) return;
   e.preventDefault();
-  const b = state.selected;
+  blocks.forEach(b => b.remove());
   state.selected = null;
-  b.remove();
+  state.selectedSet.clear();
   renderProps();
   pushHistory();
 });
@@ -8165,12 +8879,28 @@ document.addEventListener('keydown', e => {
   });
   mo.observe(document.body, { childList: true, subtree: true });
 
-  /* 点击空白处 / 滚动 / 缩放时关闭 */
+  /* 点击空白处关闭 */
   document.addEventListener('click', e => {
     if (e.target.closest('.csel-wrap') || e.target.closest('.csel-menu')) return;
     closeAllMenus();
   }, true);
-  document.addEventListener('scroll', () => closeAllMenus(), true);
+
+  /* 滚动时关闭：但菜单自身的滚动不算 */
+  document.addEventListener('scroll', e => {
+    const t = e.target;
+    if (t && t.nodeType === 1 && t.closest && t.closest('.csel-menu')) return;
+    closeAllMenus();
+  }, true);
+  /* 兜底：wheel / touchmove 落在菜单内部时也不关闭 */
+  document.addEventListener('wheel', e => {
+    if (e.target.closest && e.target.closest('.csel-menu')) return;
+    closeAllMenus();
+  }, { capture: true, passive: true });
+  document.addEventListener('touchmove', e => {
+    if (e.target.closest && e.target.closest('.csel-menu')) return;
+    closeAllMenus();
+  }, { capture: true, passive: true });
+
   window.addEventListener('resize', () => closeAllMenus());
   window.addEventListener('blur', () => closeAllMenus());
 
@@ -8546,7 +9276,7 @@ function buildStarterArticle(){
   const tipBody = tip.querySelector('.admonition-body');
   const tl = createBlock('list');
   tl.querySelector('.blk-list').innerHTML =
-    '<li>顶栏「主题」可切换 <strong>9 套网页风格</strong>（液态玻璃 / Material / 扁平 / 新拟态 / 粗野 / 终端 / 杂志 / 极简）</li>' +
+    '<li>顶栏「主题」可切换 <strong>' + Object.keys(STYLE_THEMES).length + ' 套网页风格</strong>（液态玻璃 / Material / 扁平 / 新拟态 / 粗野 / 终端 / 杂志 / 极简 / Fluent / 黏土 / 便当盒 / 极光 / 赛博朋克 / 蒸汽波 / 北欧 / Carbon / Dracula / Linear）</li>' +
     '<li>顶栏「模式」可在<strong>浅色 / 深色 / 跟随系统</strong>间切换，<strong>整个编辑器与导出网页一起变深色</strong></li>' +
     '<li>触发器新增 <strong>循环、条件判断、移动位置、改变颜色</strong>，可嵌套组合</li>' +
     '<li>左侧页面列表<b>拖动</b>到另一页面<b>中段</b>即可设为子页面</li>' +
@@ -8793,6 +9523,11 @@ async function bootRun(){
   clearTimeout(bootGuardTimer);
   bootFinish(failed);
 }
+
+const themeCountEl = document.getElementById('theme-count');
+if (themeCountEl) themeCountEl.textContent = Object.keys(STYLE_THEMES).length;
+
+try{ document.execCommand('defaultParagraphSeparator', false, 'div'); }catch(e){}
 
 applyThemeToEditor();
 renderModeButtons();
