@@ -6014,6 +6014,7 @@ function renderProps(){
   </div>`;
   html += `<div class="prop-group"><label>悬停动画</label>
     <select class="text-input" id="prop-hover">
+      <option value="" ${curHover === '' ? 'selected' : ''}>无</option>
       ${ANIMS.map(a => `<option value="${a.value}" ${a.value === curHover ? 'selected' : ''}>${a.label}</option>`).join('')}
     </select>
   </div>`;
